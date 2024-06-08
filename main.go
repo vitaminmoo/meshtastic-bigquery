@@ -6,9 +6,7 @@ import (
 	"crypto/cipher"
 	"encoding/base64"
 	"encoding/binary"
-	"encoding/hex"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"time"
 
@@ -50,7 +48,7 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 		return
 	}
 
-	fmt.Printf("decrypted: %s\n", message)
+	fmt.Printf("decrypted: %s\n\n", message)
 
 	data := &meshtastic.Data{}
 	err = proto.Unmarshal(message, data)
@@ -58,12 +56,13 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 		zl.Error("unmarshalling decrypted data", zap.Error(err))
 		return
 	}
-	fmt.Printf("data: %+v\n", data)
+	fmt.Printf("data: %0x\n", data)
 }
 
 func decrypt(from, id uint32, enc []byte) ([]byte, error) {
-	b64key := "AQ=="
-	//b64key := "1PG7OiApB1nwvP+rz05pAQ=="
+	//b64key := "AQ=="
+	b64key := "1PG7OiApB1nwvP+rz05pAQ=="
+	/*
 	l := base64.StdEncoding.DecodedLen(len(b64key))
 	var keyLen int
 	if l <= 16 {
@@ -73,6 +72,8 @@ func decrypt(from, id uint32, enc []byte) ([]byte, error) {
 	} else {
 		return nil, errors.New("invalid key length")
 	}
+	*/
+	keyLen := 16
 	key := make([]byte, keyLen)
 	var err error
 	_, err = base64.StdEncoding.Decode(key, []byte(b64key))
@@ -80,12 +81,14 @@ func decrypt(from, id uint32, enc []byte) ([]byte, error) {
 		return nil, fmt.Errorf("decoding key: %w", err)
 	}
 
+	//fmt.Printf("key: %0x\n", key)
+
 	nonce_packet_id := make([]byte, 8)
 	nonce_from_node := make([]byte, 8)
 	binary.LittleEndian.PutUint32(nonce_from_node, from)
 	binary.LittleEndian.PutUint32(nonce_packet_id, id)
 	iv := append(nonce_packet_id, nonce_from_node...)
-	fmt.Printf("iv: %s\n", hex.EncodeToString(iv))
+	//fmt.Printf("iv: %s\n", hex.EncodeToString(iv))
 
 	block, err := aes.NewCipher(key)
 	if err != nil {

@@ -39,7 +39,7 @@ func strToKey(key string) []byte {
 	} else {
 		return nil
 	}
-	buf = []byte(key)
+buf = append([]byte(key)
 	return buf
 }
 
