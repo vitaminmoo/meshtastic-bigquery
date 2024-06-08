@@ -31,11 +31,15 @@ func main() {
 }
 
 func strToKey(key string) []byte {
-	buf := make([]byte, 16)
-	for i := len(buf) - 1; seq != 0; i-- {
-		buf[i] = byte(seq & 0xff)
-		seq >>= 8
+	var buf []byte
+	if len(key) <= 16 {
+		buf = make([]byte, 16)
+	} else if len(key) <= 32 {
+		buf = make([]byte, 32)
+	} else {
+		return nil
 	}
+	buf = []byte(key)
 	return buf
 }
 

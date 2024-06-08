@@ -8,6 +8,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"time"
 
@@ -61,21 +62,18 @@ var messagePubHandler mqtt.MessageHandler = func(client mqtt.Client, msg mqtt.Me
 }
 
 func decrypt(from, id uint32, enc []byte) ([]byte, error) {
-	// b64key := "AQ=="
-	b64key := "1PG7OiApB1nwvP+rz05pAQ=="
-	/*
-		l := base64.StdEncoding.DecodedLen(len(b64key))
-		var keyLen int
-		if l <= 16 {
-			keyLen = 16
-		} else if l <= 32 {
-			keyLen = 32
-		} else {
-			return nil, errors.New("invalid key length")
-		}
-		key := make([]byte, keyLen)
-	*/
-	key := []byte("1PG7OiApB1nwvP+rz05pAQ==")
+	b64key := "AQ=="
+	//b64key := "1PG7OiApB1nwvP+rz05pAQ=="
+	l := base64.StdEncoding.DecodedLen(len(b64key))
+	var keyLen int
+	if l <= 16 {
+		keyLen = 16
+	} else if l <= 32 {
+		keyLen = 32
+	} else {
+		return nil, errors.New("invalid key length")
+	}
+	key := make([]byte, keyLen)
 	var err error
 	_, err = base64.StdEncoding.Decode(key, []byte(b64key))
 	if err != nil {
@@ -117,6 +115,7 @@ func main() {
 	opts.AddBroker(fmt.Sprintf("tcp://%s:%d", broker, port))
 	opts.SetClientID("go_mqtt_client")
 	opts.SetUsername("meshtastic")
+	// this isn't exposed to the internet, good luck
 	opts.SetPassword("FDQ9flAlvybb0a")
 	opts.SetDefaultPublishHandler(messagePubHandler)
 	opts.OnConnect = connectHandler
